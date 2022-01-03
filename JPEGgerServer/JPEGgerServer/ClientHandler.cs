@@ -206,7 +206,7 @@ namespace JPEGgerServer
                 {
                     Thread captureImage = new Thread(() => CaptureImage(camera.FirstOrDefault(), jpeggerRequest));
                     captureImage.Start();
-                    LogEvents($" Success status sending for ticket number {jpeggerRequest.TicketNumber}");
+                    LogEvents($" Camera exist, sending  Success for ticket number {jpeggerRequest.TicketNumber}");
                     return "SUCCESS";
                 }
                 else if (camera != null && camera.Count > 1)
@@ -215,14 +215,14 @@ namespace JPEGgerServer
                     {
                         Thread captureImage = new Thread(() => CaptureImage(item, jpeggerRequest));
                         captureImage.Start();
-                        LogEvents($" Success status sending for ticket number {jpeggerRequest.TicketNumber}");
+                        LogEvents($" Camera exist, sending  Success for ticket number  {jpeggerRequest.TicketNumber}");
                     }
 
                     return "SUCCESS  ";
                 }
                 else
                 {
-                    LogEvents($" Fail status sending for ticket number {jpeggerRequest.TicketNumber}");
+                    LogEvents($" Camera doesn't exist. Sending Fail for ticket number {jpeggerRequest.TicketNumber}");
                     return "FAIL  ";
                 }
             }

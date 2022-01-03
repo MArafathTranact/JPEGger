@@ -40,9 +40,8 @@ namespace JPEGgerServer
             // 
             // serviceInstaller1
             // 
-            this.serviceInstaller1.Description = "Captures  camera images and process multiple commands";
-            this.serviceInstaller1.DisplayName = "Trancat JPEGGer";
-            this.serviceInstaller1.ServiceName = "JPEGger";
+            this.serviceInstaller1.ServiceName = "JPEGgerServer";
+            this.serviceInstaller1.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
             // 
             // ProjectInstaller
             // 
