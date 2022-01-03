@@ -43,7 +43,7 @@ namespace JPEGgerServer
                             LogEvents($" Client Connection in on {IPAddress.Parse(((IPEndPoint)client.RemoteEndPoint).Address.ToString()) } , Port {((IPEndPoint)client.RemoteEndPoint).Port}");
 
                             ClientHandler clientHandler = new ClientHandler(client);
-                            Thread thread = new Thread(clientHandler.HandleRequest);
+                            Thread thread = new Thread(clientHandler.HandleRequestAsync);
                             handlerList.Add(clientHandler);
                             socketList.Add(client);
                             LogEvents($" Client Handler created ");

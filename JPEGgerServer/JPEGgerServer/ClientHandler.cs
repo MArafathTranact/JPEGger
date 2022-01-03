@@ -28,7 +28,7 @@ namespace JPEGgerServer
 
         #region Handler
 
-        public void HandleRequest()
+        public async void HandleRequestAsync()
         {
             try
             {
@@ -45,9 +45,9 @@ namespace JPEGgerServer
                             string request = Utilities.ByteToHexa(bytes.Take(byteCount).ToArray());
 
                             var command = request.Split(' ')[0].Trim();
-                            LogEvents($" Processing  :{request}");
+                            LogEvents($" Processing  : {request}");
 
-                            ParseJPEGgerRequest(request, command);
+                            await ParseJPEGgerRequest(request, command);
                         }
 
                     }
@@ -73,7 +73,7 @@ namespace JPEGgerServer
         #endregion
 
         #region General 
-        private void ParseJPEGgerRequest(string request, string command)
+        private async Task ParseJPEGgerRequest(string request, string command)
         {
             var response = string.Empty;
 
@@ -83,7 +83,7 @@ namespace JPEGgerServer
                     response = ProcessCaptureCommand(command, request);
                     break;
                 case "map":
-                    response = ProcessMapCommand(command, request);
+                    response = await ProcessMapCommand(command, request);
                     break;
                 case "copyimage":
                     response = ProcessCopyImageCommand(command, request);
@@ -448,13 +448,14 @@ namespace JPEGgerServer
         #endregion
 
         #region Map
-        private string ProcessMapCommand(string command, string request)
+        private async Task<string> ProcessMapCommand(string command, string request)
         {
             try
             {
                 var splittedRequest = request.Replace(command, "").Split('>');
                 List<string> ticketNumbers = new List<string>();
                 List<string> receiptNumbers = new List<string>();
+                List<bool> mapStatus = new List<bool>();
                 foreach (var item in splittedRequest)
                 {
                     var split = item.Split(new string[] { "=<" }, StringSplitOptions.None);
@@ -476,10 +477,19 @@ namespace JPEGgerServer
                     {
                         var jpeggerMap = new JpeggerMap() { ticket_nbr = ticketNumber, receipt_nbr = receiptNumbers.FirstOrDefault(), yardid = GetAppSettingValue("YardId"), date_time = DateTime.UtcNow };
 
-                        if (CreateRTLookUp(jpeggerMap))
+                        var result = await CreateRTLookUp(jpeggerMap);
+                        if (result)
+                        {
+                            mapStatus.Add(true);
+
                             LogEvents($" Relationship mapped for receipt ='{jpeggerMap.receipt_nbr}' with ticket='{jpeggerMap.ticket_nbr}' ");
+                        }
                         else
+                        {
+                            mapStatus.Add(false);
                             LogEvents($" Relationship mapping failed for receipt ='{jpeggerMap.receipt_nbr}' with ticket='{jpeggerMap.ticket_nbr}' ");
+
+                        }
                     }
                 }
                 else if (ticketNumbers.Count == 1)
@@ -488,14 +498,25 @@ namespace JPEGgerServer
                     {
                         var jpeggerMap = new JpeggerMap() { ticket_nbr = ticketNumbers.FirstOrDefault(), receipt_nbr = receiptNumber, yardid = GetAppSettingValue("YardId"), date_time = DateTime.UtcNow };
 
-                        if (CreateRTLookUp(jpeggerMap))
+                        var result = await CreateRTLookUp(jpeggerMap);
+                        if (result)
+                        {
+                            mapStatus.Add(true);
                             LogEvents($" Relationship mapped for  ticket ='{jpeggerMap.ticket_nbr}' with receipt ='{jpeggerMap.receipt_nbr}'");
+                        }
                         else
+                        {
+                            mapStatus.Add(false);
                             LogEvents($" Relationship mapping failed for  ticket ='{jpeggerMap.ticket_nbr}' with receipt ='{jpeggerMap.receipt_nbr}'");
+
+                        }
                     }
                 }
 
-                return "SUCCESS";
+                if (mapStatus.Contains(false))
+                    return "FAIL";
+                else
+                    return "SUCCESS";
             }
             catch (Exception ex)
             {
@@ -505,7 +526,7 @@ namespace JPEGgerServer
             }
         }
 
-        private bool CreateRTLookUp(JpeggerMap jpeggerMap)
+        private async Task<bool> CreateRTLookUp(JpeggerMap jpeggerMap)
         {
             var method = "";
             try
@@ -514,8 +535,8 @@ namespace JPEGgerServer
                 using (var client = new HttpClient())
                 {
                     method = GetAppSettingValue("JPEGgerAPI") + "rt_lookups";
-                    client.Timeout = TimeSpan.FromSeconds(3);
-                    using (HttpResponseMessage response = client.PostAsync(method, jpeggerMap, new JsonMediaTypeFormatter()).Result)
+                    client.Timeout = TimeSpan.FromSeconds(5);
+                    using (HttpResponseMessage response = await client.PostAsync(method, jpeggerMap, new JsonMediaTypeFormatter()))
                     {
                         if (response.IsSuccessStatusCode)
                         {

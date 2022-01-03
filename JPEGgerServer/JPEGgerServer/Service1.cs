@@ -19,7 +19,7 @@ namespace JPEGgerServer
         public Service1()
         {
             InitializeComponent();
-            //ConnectSocket();
+            ConnectSocket();
         }
 
         protected override void OnStart(string[] args)
