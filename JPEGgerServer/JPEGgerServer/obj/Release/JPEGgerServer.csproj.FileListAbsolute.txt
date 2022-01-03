@@ -1,0 +1,13 @@
+C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\bin\Release\JPEGgerServer.exe.config
+C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\bin\Release\JPEGgerServer.exe
+C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\bin\Release\JPEGgerServer.pdb
+C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\bin\Release\Newtonsoft.Json.dll
+C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\bin\Release\System.Net.Http.Formatting.dll
+C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\bin\Release\Newtonsoft.Json.xml
+C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\bin\Release\System.Net.Http.Formatting.xml
+C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\obj\Release\JPEGgerServer.ProjectInstaller.resources
+C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\obj\Release\JPEGgerServer.csproj.GenerateResource.cache
+C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\obj\Release\JPEGgerServer.csproj.CoreCompileInputs.cache
+C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\obj\Release\JPEGgerServer.csproj.CopyComplete
+C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\obj\Release\JPEGgerServer.exe
+C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\obj\Release\JPEGgerServer.pdb

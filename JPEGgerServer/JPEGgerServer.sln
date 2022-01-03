@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30907.101
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JPEGgerServer", "JPEGgerServer\JPEGgerServer.csproj", "{41CADED3-49F8-4CF6-83C6-B209D0ED53B4}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "JPEGgerInstaller", "JPEGgerInstaller\JPEGgerInstaller.vdproj", "{7D30783C-35ED-43C8-A966-8F239898BAB1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{41CADED3-49F8-4CF6-83C6-B209D0ED53B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41CADED3-49F8-4CF6-83C6-B209D0ED53B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41CADED3-49F8-4CF6-83C6-B209D0ED53B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41CADED3-49F8-4CF6-83C6-B209D0ED53B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D30783C-35ED-43C8-A966-8F239898BAB1}.Debug|Any CPU.ActiveCfg = Debug
+		{7D30783C-35ED-43C8-A966-8F239898BAB1}.Release|Any CPU.ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DE087A40-EA09-4B72-ACB5-C7B36DB5E9AF}
+	EndGlobalSection
+EndGlobal
