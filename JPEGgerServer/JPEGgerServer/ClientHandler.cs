@@ -40,6 +40,8 @@ namespace JPEGgerServer
                         int byteCount = clientTransaction.Receive(client, bytes, 0, client.ReceiveBufferSize, 1000);
                         if (byteCount > 0)
                         {
+                            LogEvents($" Processing Jpegger request ");
+
                             string request = Utilities.ByteToHexa(bytes.Take(byteCount).ToArray());
 
                             var command = request.Split(' ')[0].Trim();
@@ -125,7 +127,7 @@ namespace JPEGgerServer
         }
         private void LogEvents(string input)
         {
-            Logger.LogWithNoLock($"{DateTime.Now:MM-dd-yyyy HH:mm:ss}:{input}");
+            Logger.LogWithNoLock($"{DateTime.Now:MM-dd-yyyy HH:mm:ss}: {Thread.CurrentThread.ManagedThreadId} : {input}");
         }
 
 
@@ -512,6 +514,7 @@ namespace JPEGgerServer
                 using (var client = new HttpClient())
                 {
                     method = GetAppSettingValue("JPEGgerAPI") + "rt_lookups";
+                    client.Timeout = TimeSpan.FromSeconds(3);
                     using (HttpResponseMessage response = client.PostAsync(method, jpeggerMap, new JsonMediaTypeFormatter()).Result)
                     {
                         if (response.IsSuccessStatusCode)
@@ -521,6 +524,11 @@ namespace JPEGgerServer
 
                     }
                 }
+            }
+            catch (TimeoutException ex)
+            {
+                LogEvents($" Timed out for mapping ticket '{jpeggerMap.ticket_nbr}' with receipt '{jpeggerMap.receipt_nbr}'");
+                return false;
             }
             catch (Exception ex)
             {
@@ -579,9 +587,9 @@ namespace JPEGgerServer
                 ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
                 using (var client = new HttpClient())
                 {
-                    client.Timeout = TimeSpan.FromSeconds(120);
+                    client.Timeout = TimeSpan.FromSeconds(5);
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    method = GetAppSettingValue("JPEGgerAPI") + source + "/" + id + "/copy_to_images";
+                    method = GetAppSettingValue("JPEGgerAPI") + source + "/" + id + "/copy?destination=" + destination;
                     using (HttpResponseMessage response = client.GetAsync(method).Result)
                     {
                         if (response.IsSuccessStatusCode)
@@ -589,17 +597,24 @@ namespace JPEGgerServer
                             LogEvents($" Copied image from {source} to {destination} with id {id} is success");
                             return true;
                         }
+                        else
+                        {
+                            LogEvents($" Failed to copy image from {source} to {destination} with id {id} . {response.StatusCode}");
+                            return false;
+                        }
                     }
                 }
+            }
+            catch (TimeoutException ex)
+            {
+                LogEvents($" Timed out to copy image from {source} to {destination} with id {id}");
+                return false;
             }
             catch (Exception ex)
             {
                 LogEvents($" Exception at ClientHandler.ProcessCopyImageCommand, Message :{ex.Message }");
                 return false;
             }
-
-            return true;
-
         }
         #endregion
 

@@ -42,6 +42,8 @@ namespace JPEGgerServer
         {
             try
             {
+                Logger.LogWithNoLock(" Service Started ");
+                Logger.LogWithNoLock($" -------- Maximum file size for the log is {Logger.logsize}MB --------");
                 tCPListener = new TCPListener();
                 tCPListener.StartListener();
             }

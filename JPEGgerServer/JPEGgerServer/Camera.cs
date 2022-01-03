@@ -14,8 +14,8 @@ namespace JPEGgerServer
     [Serializable]
     public class Camera
     {
-        private static List<Camera> Cameras = GetCameraList();
-        private static List<CameraGroup> CameraGroups = GetCameraGroupList();
+        public static List<Camera> Cameras = GetCameraList();
+        public static List<CameraGroup> CameraGroups = GetCameraGroupList();
 
         public string Camera_Name { get; set; }
         public string Device_Name { get; set; }
@@ -101,7 +101,7 @@ namespace JPEGgerServer
                 using (var client = new HttpClient())
                 {
                     //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Token", GetAppSettingValue("JPEGgerToken"));
-                    client.Timeout = TimeSpan.FromSeconds(120);
+                    client.Timeout = TimeSpan.FromSeconds(15);
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     method = GetAppSettingValue("JPEGgerAPI") + path;
                     using (HttpResponseMessage response = client.GetAsync(method).Result)

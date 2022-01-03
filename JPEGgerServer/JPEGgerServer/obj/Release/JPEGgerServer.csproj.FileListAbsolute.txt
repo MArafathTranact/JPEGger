@@ -11,3 +11,16 @@ C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\obj\Release\JPEGgerServer.c
 C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\obj\Release\JPEGgerServer.csproj.CopyComplete
 C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\obj\Release\JPEGgerServer.exe
 C:\Projects\AsyncJPEGger\JPEGgerServer\JPEGgerServer\obj\Release\JPEGgerServer.pdb
+C:\Users\araaf\source\repos\JPEGgerServer\JPEGger\JPEGgerServer\JPEGgerServer\bin\Release\JPEGgerServer.exe.config
+C:\Users\araaf\source\repos\JPEGgerServer\JPEGger\JPEGgerServer\JPEGgerServer\bin\Release\JPEGgerServer.exe
+C:\Users\araaf\source\repos\JPEGgerServer\JPEGger\JPEGgerServer\JPEGgerServer\bin\Release\JPEGgerServer.pdb
+C:\Users\araaf\source\repos\JPEGgerServer\JPEGger\JPEGgerServer\JPEGgerServer\bin\Release\Newtonsoft.Json.dll
+C:\Users\araaf\source\repos\JPEGgerServer\JPEGger\JPEGgerServer\JPEGgerServer\bin\Release\System.Net.Http.Formatting.dll
+C:\Users\araaf\source\repos\JPEGgerServer\JPEGger\JPEGgerServer\JPEGgerServer\bin\Release\Newtonsoft.Json.xml
+C:\Users\araaf\source\repos\JPEGgerServer\JPEGger\JPEGgerServer\JPEGgerServer\bin\Release\System.Net.Http.Formatting.xml
+C:\Users\araaf\source\repos\JPEGgerServer\JPEGger\JPEGgerServer\JPEGgerServer\obj\Release\JPEGgerServer.ProjectInstaller.resources
+C:\Users\araaf\source\repos\JPEGgerServer\JPEGger\JPEGgerServer\JPEGgerServer\obj\Release\JPEGgerServer.csproj.GenerateResource.cache
+C:\Users\araaf\source\repos\JPEGgerServer\JPEGger\JPEGgerServer\JPEGgerServer\obj\Release\JPEGgerServer.csproj.CoreCompileInputs.cache
+C:\Users\araaf\source\repos\JPEGgerServer\JPEGger\JPEGgerServer\JPEGgerServer\obj\Release\JPEGgerServer.csproj.CopyComplete
+C:\Users\araaf\source\repos\JPEGgerServer\JPEGger\JPEGgerServer\JPEGgerServer\obj\Release\JPEGgerServer.exe
+C:\Users\araaf\source\repos\JPEGgerServer\JPEGger\JPEGgerServer\JPEGgerServer\obj\Release\JPEGgerServer.pdb

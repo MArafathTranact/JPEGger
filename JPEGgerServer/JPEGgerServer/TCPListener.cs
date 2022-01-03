@@ -22,6 +22,9 @@ namespace JPEGgerServer
             {
                 handlerList = new ArrayList();
                 socketList = new ArrayList();
+                LogEvents($" Total Cameras = {Camera.Cameras.Count()}");
+                LogEvents($" Total Camera groups = {Camera.CameraGroups.Count()}");
+
                 IPAddress ipAddress = IPAddress.Parse(Logger.GetAppSettingValue("Ip"));
                 listener = new TcpListener(ipAddress, int.Parse(Logger.GetAppSettingValue("Port")));
                 listener.Start();
