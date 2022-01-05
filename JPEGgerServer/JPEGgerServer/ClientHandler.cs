@@ -143,63 +143,105 @@ namespace JPEGgerServer
                 foreach (var item in splittedRequest)
                 {
                     var split = item.Split(new string[] { "=<" }, StringSplitOptions.None);
-                    var filter = split[0].Trim();
+                    var filter = split[0].Trim().ToLower();
                     switch (filter)
                     {
-                        case "camera_name":
+                        case var s when filter.Contains("camera_name"):
                             jpeggerRequest.CameraName = split[1];
                             break;
-                        case "amount":
+                        case var s when filter.Contains("amount"):
                             jpeggerRequest.Amount = split[1];
                             break;
-                        case "receipt_nbr":
+                        case var s when filter.Contains("receipt_nbr"):
                             jpeggerRequest.ReceiptNumber = int.Parse(split[1]);
                             break;
-                        case "location":
+                        case var s when filter.Contains("location"):
                             jpeggerRequest.Location = split[1];
                             break;
-                        case "event_code":
+                        case var s when filter.Contains("event_code"):
                             jpeggerRequest.EventCode = split[1];
                             break;
-                        case "cust_nbr":
+                        case var s when filter.Contains("cust_nbr"):
                             jpeggerRequest.CustomerNumber = split[1];
                             break;
-                        case "cert_nbr":
+                        case var s when filter.Contains("cert_nbr"):
                             jpeggerRequest.CertificationNumber = split[1];
                             break;
-                        case "last_name":
+                        case var s when filter.Contains("last_name"):
                             jpeggerRequest.CustomerLastName = split[1];
                             break;
-                        case "first_name":
+                        case var s when filter.Contains("first_name"):
                             jpeggerRequest.CustomerFirstName = split[1];
                             break;
-                        case "YardId":
-                            jpeggerRequest.YardId = Guid.Parse(GetAppSettingValue("YardId"));
-                            break;
-                        case "ticket_nbr":
+                        case var s when filter.Contains("ticket_nbr"):
                             jpeggerRequest.TicketNumber = split[1];
                             break;
-                        case "Tare_seq_nbr":
+                        case var s when filter.Contains("tare_seq_nbr"):
                             jpeggerRequest.TareSequenceNumber = split[1];
                             break;
-                        case "cust_name":
+                        case var s when filter.Contains("cust_name"):
                             jpeggerRequest.CustomerName = split[1];
                             break;
-                        case "cmdy_name":
+                        case var s when filter.Contains("cmdy_name"):
                             jpeggerRequest.CommodityName = split[1];
                             break;
-                        case "weight":
+                        case var s when filter.Contains("weight"):
                             jpeggerRequest.Weight = split[1];
                             break;
-                        case "Table":
+                        case var s when filter.Contains("table"):
                             jpeggerRequest.TableName = split[1];
                             break;
-                        case "man_weight_flag":
+                        case var s when filter.Contains("man_weight_flag"):
                             jpeggerRequest.IsManual = int.Parse(split[1]);
                             break;
+                        case var s when filter.Contains("cmdy_nbr"):
+                            jpeggerRequest.CommodityNumber = split[1];
+                            break;
+                        case var s when filter.Contains("branch_code"):
+                            jpeggerRequest.BranchCode = split[1];
+                            break;
+                        case var s when filter.Contains("transaction_type"):
+                            jpeggerRequest.TransactionType = split[1];
+                            break;
+                        case var s when filter.Contains("initials"):
+                            jpeggerRequest.Initials = split[1];
+                            break;
+                        case var s when filter.Contains("app_date_time"):
+                            jpeggerRequest.AppDateTime = split[1];
+                            break;
+                        case var s when filter.Contains("contr_name"):
+                            jpeggerRequest.ContractName = split[1];
+                            break;
+                        case var s when filter.Contains("contr_nbr"):
+                            jpeggerRequest.ContractNumber = split[1];
+                            break;
+                        case var s when filter.Contains("container_nbr"):
+                            jpeggerRequest.ContainerNumber = split[1];
+                            break;
+                        case var s when filter.Contains("contract_name"):
+                            jpeggerRequest.Contract_Number = split[1];
+                            break;
+                        case var s when filter.Contains("routingnumber"):
+                            jpeggerRequest.RoutingNumber = split[1];
+                            break;
+                        case var s when filter.Contains("accountnumber"):
+                            jpeggerRequest.AccountNumber = split[1];
+                            break;
+                        case var s when filter.Contains("checknumber"):
+                            jpeggerRequest.CheckNumber = split[1];
+                            break;
+                        case var s when filter.Contains("ticket_type"):
+                            jpeggerRequest.TicketType = split[1];
+                            break;
+
                     }
 
                 }
+
+                if (string.IsNullOrEmpty(jpeggerRequest.TableName))
+                    jpeggerRequest.TableName = "images";
+
+                jpeggerRequest.YardId = Guid.Parse(GetAppSettingValue("YardId"));
 
                 var camera = Camera.GetConfiguredCamera(jpeggerRequest.CameraName);
                 if (camera != null && camera.Count == 1)
@@ -354,6 +396,45 @@ namespace JPEGgerServer
                             case "CustomerNumber":
                                 param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[cust_nbr]", prop.GetValue(request)?.ToString());
                                 break;
+                            case "BranchCode":
+                                param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[branch_code]", prop.GetValue(request)?.ToString());
+                                break;
+                            case "CommodityName":
+                                param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[cmdy_name]", prop.GetValue(request)?.ToString());
+                                break;
+                            case "CommodityNumber":
+                                param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[cmdy_nbr]", prop.GetValue(request)?.ToString());
+                                break;
+                            case "Initials":
+                                param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[initials]", prop.GetValue(request)?.ToString());
+                                break;
+                            case "TransactionType":
+                                param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[transaction_type]", prop.GetValue(request)?.ToString());
+                                break;
+                            case "IsManual":
+                                param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[man_weight_flag]", prop.GetValue(request)?.ToString());
+                                break;
+                            case "AppDateTime":
+                                param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[app_date_time]", prop.GetValue(request)?.ToString());
+                                break;
+                            case "ContainerNumber":
+                                param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[container_nbr]", prop.GetValue(request)?.ToString());
+                                break;
+                            case "Contract_Number":
+                                param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[contract_name]", prop.GetValue(request)?.ToString());
+                                break;
+                            case "RoutingNumber":
+                                param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[routingnumber]", prop.GetValue(request)?.ToString());
+                                break;
+                            case "AccountNumber":
+                                param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[accountnumber]", prop.GetValue(request)?.ToString());
+                                break;
+                            case "CheckNumber":
+                                param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[checknumber]", prop.GetValue(request)?.ToString());
+                                break;
+                            case "TicketType":
+                                param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[ticket_type]", prop.GetValue(request)?.ToString());
+                                break;
                             default:
                                 needNewLine = false;
                                 param = string.Empty;
@@ -410,7 +491,7 @@ namespace JPEGgerServer
             var status = false;
             try
             {
-                LogEvents($" Saving captured image for the ticket '{ticketNumber}' ");
+                LogEvents($" Saving captured image to '{table}' table");
                 //ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
                 var request = WebRequest.Create(GetAppSettingValue("JPEGgerAPI") + table);
                 request.Method = "POST";
@@ -431,7 +512,7 @@ namespace JPEGgerServer
                         //Capture_seq_nbr = JsonConvert.DeserializeObject<CapturedImageResponse>(result).Capture_Seq_Nbr;
                         status = true;
 
-                        LogEvents($" Image posted succesfully for the ticket '{ticketNumber}' ");
+                        LogEvents($" Image posted succesfully to '{table}' table");
                     }
                     else
                         status = false;
