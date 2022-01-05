@@ -44,7 +44,7 @@ namespace JPEGgerServer
 
                             string request = Utilities.ByteToHexa(bytes.Take(byteCount).ToArray());
 
-                            var command = request.Split(' ')[0].Trim();
+                            var command = request.Split(' ')[0].Trim().ToLower();
                             LogEvents($" Processing  : {request}");
 
                             await ParseJPEGgerRequest(request, command);
@@ -80,12 +80,15 @@ namespace JPEGgerServer
             switch (command)
             {
                 case "capture":
+                    LogEvents($" Entering camera capture. ");
                     response = ProcessCaptureCommand(command, request);
                     break;
                 case "map":
+                    LogEvents($" Entering map. ");
                     response = await ProcessMapCommand(command, request);
                     break;
                 case "copyimage":
+                    LogEvents($" Entering copy image. ");
                     response = ProcessCopyImageCommand(command, request);
                     break;
                 case "void":
@@ -248,7 +251,7 @@ namespace JPEGgerServer
                 {
                     Thread captureImage = new Thread(() => CaptureImage(camera.FirstOrDefault(), jpeggerRequest));
                     captureImage.Start();
-                    LogEvents($" Camera exist, sending  Success for ticket number {jpeggerRequest.TicketNumber}");
+                    LogEvents($" Camera exist, sending  Success to the requested camera '{jpeggerRequest.CameraName}'");
                     return "SUCCESS";
                 }
                 else if (camera != null && camera.Count > 1)
@@ -257,14 +260,14 @@ namespace JPEGgerServer
                     {
                         Thread captureImage = new Thread(() => CaptureImage(item, jpeggerRequest));
                         captureImage.Start();
-                        LogEvents($" Camera exist, sending  Success for ticket number  {jpeggerRequest.TicketNumber}");
+                        LogEvents($" Camera exist, sending  Success to the requested camera '{jpeggerRequest.CameraName}'");
                     }
 
                     return "SUCCESS  ";
                 }
                 else
                 {
-                    LogEvents($" Camera doesn't exist. Sending Fail for ticket number {jpeggerRequest.TicketNumber}");
+                    LogEvents($" Camera doesn't exist. Sending Fail to the requested camera '{jpeggerRequest.CameraName}'");
                     return "FAIL  ";
                 }
             }
@@ -283,7 +286,7 @@ namespace JPEGgerServer
                 var mstream = TakePicture(camera, request.TicketNumber);
                 if (mstream != null && mstream.Length > 0)
                 {
-                    LogEvents($" Image captured for ticket number {request.TicketNumber} from '{camera.Camera_Name}' camera ,length {mstream.Length}");
+                    LogEvents($" Image captured from '{camera.Camera_Name}' camera ,length {mstream.Length}");
                     await PostJpeggerImage(mstream, request);
                 }
             }
@@ -293,7 +296,7 @@ namespace JPEGgerServer
         {
             try
             {
-                LogEvents($" Capturing Image for ticket number {ticketNumber} from '{camera.Camera_Name}' camera ");
+                LogEvents($" Capturing image from '{camera.Camera_Name}' camera ");
                 var req = WebRequest.Create(camera.URL);
                 req.Timeout = 6000;
                 if (!string.IsNullOrEmpty(camera.Username) && !string.IsNullOrEmpty(camera.Pwd))
@@ -323,19 +326,19 @@ namespace JPEGgerServer
         {
             try
             {
-                LogEvents($" Start saving captured image for the ticket '{request.TicketNumber}' , image length ={img.Length} ");
+                LogEvents($" Start saving captured image from camera '{request.CameraName}' , image length ={img.Length} ");
                 var formDataBoundary = String.Format("----------{0:N}", Guid.NewGuid());
                 var contentType = "multipart/form-data; boundary=" + formDataBoundary;
                 var tableName = request.TableName.ToLowerInvariant();
                 var formData = await GenerateMultipartFormData(formDataBoundary, img, request, tableName);
                 if (formData != null)
                 {
-                    return await PostMultiForm(contentType, formData, tableName, request.TicketNumber);
+                    return await PostMultiForm(contentType, formData, tableName);
                 }
             }
             catch (Exception ex)
             {
-                LogEvents($" Failed to save the captured image for ticket  '{request.TicketNumber}', Exception Message :{ex.Message }");
+                LogEvents($" Failed to save the captured image from camera '{request.CameraName}', Exception Message :{ex.Message }");
             }
 
             return false;
@@ -347,7 +350,7 @@ namespace JPEGgerServer
             {
                 using (var formDataStream = new MemoryStream())
                 {
-                    LogEvents($" Generating multipart data for ticket '{request.TicketNumber}' ");
+                    LogEvents($" Generating multipart data for camera '{request.CameraName}' ");
                     var needNewLine = false;
                     table = table.TrimEnd('s').ToLowerInvariant();
                     var param = string.Empty;
@@ -481,12 +484,12 @@ namespace JPEGgerServer
             }
             catch (Exception ex)
             {
-                LogEvents($" Failed to generate multipart data for ticket  '{request.TicketNumber}', Exception Message :{ex.Message }");
+                LogEvents($" Failed to generate multipart data for camera  '{request.CameraName}', Exception Message :{ex.Message }");
                 return null;
             }
         }
 
-        public async Task<bool> PostMultiForm(string contentType, byte[] formData, string table, string ticketNumber)
+        public async Task<bool> PostMultiForm(string contentType, byte[] formData, string table)
         {
             var status = false;
             try
@@ -521,7 +524,7 @@ namespace JPEGgerServer
             }
             catch (Exception ex)
             {
-                LogEvents($" Failed to save the captured image for ticket  '{ticketNumber}', Exception Message :{ex.Message }");
+                LogEvents($" Failed to save the captured image to table '{table}', Exception Message :{ex.Message }");
                 return status;
             }
         }
