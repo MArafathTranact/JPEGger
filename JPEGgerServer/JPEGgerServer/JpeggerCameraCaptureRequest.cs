@@ -54,6 +54,8 @@ namespace JPEGgerServer
         public string RoutingNumber { get; set; }
         public string AccountNumber { get; set; }
         public string CheckNumber { get; set; }
+        public string IdNumber { get; set; }
+        public string ContractId { get; set; }
     }
 
     public class JpeggerMap
@@ -76,5 +78,20 @@ namespace JPEGgerServer
         public string TransactionType { get; set; }
         public string BranchCode { get; set; }
 
+    }
+
+    public class JpeggerWebRequest
+    {
+        public string TicketNumber { get; set; }
+        public string YardId { get; set; }
+        public string CaptureSeqNumber { get; set; }
+        public bool Image { get; set; }
+        public bool Detail { get; set; }
+
+    }
+
+    public class TicketToken
+    {
+        public string Token { get; set; }
     }
 }
