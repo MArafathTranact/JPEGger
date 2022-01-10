@@ -43,11 +43,19 @@ namespace JPEGgerServer
                             LogEvents($" Processing Jpegger request ");
 
                             string request = Utilities.ByteToHexa(bytes.Take(byteCount).ToArray());
-
-                            var command = request.Split(' ')[0].Trim().ToLower();
                             LogEvents($" Processing  : {request}");
+                            var webrequestValidator = request.Split(new string[] { "\r" }, StringSplitOptions.None)[0];
+                            if (!string.IsNullOrEmpty(webrequestValidator) && webrequestValidator.Contains("sdcgi"))
+                            {
+                                ProcessWebRequest(request, request);
+                                //ProcessWebRequest(request, request);
+                            }
+                            else if (!string.IsNullOrEmpty(request) && !request.Contains("sdcgi"))
+                            {
+                                var command = request.Split(' ')[0].Trim().ToLower();
+                                await ParseJPEGgerRequest(request, command);
+                            }
 
-                            await ParseJPEGgerRequest(request, command);
                         }
 
                     }
@@ -70,7 +78,7 @@ namespace JPEGgerServer
 
         }
 
-        #endregion
+        #endregion       
 
         #region General 
         private async Task ParseJPEGgerRequest(string request, string command)
@@ -235,6 +243,12 @@ namespace JPEGgerServer
                             break;
                         case var s when filter.Contains("ticket_type"):
                             jpeggerRequest.TicketType = split[1];
+                            break;
+                        case var s when filter.Contains("id"):
+                            jpeggerRequest.IdNumber = split[1];
+                            break;
+                        case var s when filter.Contains("contract_id"):
+                            jpeggerRequest.ContractId = split[1];
                             break;
 
                     }
@@ -437,6 +451,12 @@ namespace JPEGgerServer
                                 break;
                             case "TicketType":
                                 param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[ticket_type]", prop.GetValue(request)?.ToString());
+                                break;
+                            case "IdNumber":
+                                param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[id_number]", prop.GetValue(request)?.ToString());
+                                break;
+                            case "ContractId":
+                                param = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}", boundary, $"{table}[contract_id]", prop.GetValue(request)?.ToString());
                                 break;
                             default:
                                 needNewLine = false;
@@ -747,7 +767,144 @@ namespace JPEGgerServer
 
         #endregion
 
+        #region WebRequest
 
+        private void ProcessWebRequest(string request, string command)
+        //private void ProcessWebRequest(string request, string command)
+        {
+            try
+            {
+                request = request.Split(new string[] { "\r" }, StringSplitOptions.None)[0];
+                LogEvents($"Request : {request}");
+
+                var response = string.Empty;
+
+                var split = request.Split('?');
+                var parameters = split[1].Split('&');
+                var webRequest = new JpeggerWebRequest();
+                foreach (var item in parameters)
+                {
+                    var actualValue = item.Split('=');
+                    var filter = actualValue[0];
+                    switch (filter)
+                    {
+                        case var s when filter.Contains("ticket_nbr"):
+                            webRequest.TicketNumber = actualValue[1];
+                            break;
+                        case var s when filter.Contains("location"):
+                            webRequest.YardId = actualValue[1];
+                            break;
+                        case var s when filter.Contains("capture_seq_nbr"):
+                            webRequest.CaptureSeqNumber = actualValue[1];
+                            break;
+                        case var s when filter.Contains("image"):
+                            webRequest.Image = Convert.ToBoolean(actualValue[1]);
+                            break;
+                        case var s when filter.Contains("detail"):
+                            webRequest.Detail = Convert.ToBoolean(actualValue[1]);
+                            break;
+                    }
+                }
+
+                webRequest.TicketNumber = "22093";
+
+                if (!string.IsNullOrEmpty(webRequest.TicketNumber))
+                {
+                    ProcessImage(webRequest.TicketNumber);
+                }
+                else if (webRequest.Detail)
+                {
+
+                }
+                else if (webRequest.Image)
+                {
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                LogEvents($" Exception at ClientHandler.ProcessWebRequest, Message :{ex.Message }");
+            }
+
+        }
+
+        private void ProcessImage(string ticketNumber = "22093")
+        {
+            try
+            {
+
+                var response = Get<TicketToken>("tokens/generate");
+                if (response != null)
+                {
+                    var uri = $"{GetAppSettingValue("JPEGgerWebViewer")}images?ticket_number={ticketNumber}&token={response.Token}";
+
+                    using (var clientReq = new HttpClient())
+                    {
+                        clientReq.DefaultRequestHeaders.Add("Title", "JPEGger");
+
+                        // string statusLine = "HTTP/1.1 200 OK\r\n";
+                        var content = clientReq.GetStringAsync(uri);
+
+                        string statusLine = "HTTP/1.1 200 OK\r\n";
+                        string responseHeader = "Content-Type: text/html\r\n";
+                        string responseBody = "<html><head><title>Hello World!</title></head><body><div>Hello World!</div></body></html>";
+                        var content1 = statusLine + responseHeader + responseBody;
+
+                        LogEvents($"Writign responses..{responseBody}");
+                        client.Send(Encoding.UTF8.GetBytes(responseBody));
+                        //client.Send(Encoding.UTF8.GetBytes(responseHeader));
+                        //client.Send(Encoding.UTF8.GetBytes("\r\n"));
+                        //client.Send(Encoding.UTF8.GetBytes(responseBody));
+
+                        Thread.Sleep(5000);
+                        //content = content.Replace("<!DOCTYPE html>", "");
+                        //LogEvents($"{content}");
+
+                        //byte[] sendData = Utilities.GetSendBytes(content);
+                        //clientTransaction.Send(client, sendData, 0, sendData.Length, 10000);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                LogEvents($" Exception at ClientHandler.ProcessWebRequest.ProcessImage, Message :{ex.Message }");
+            }
+        }
+
+        public T Get<T>(string path)
+        {
+            var httpResponseString = string.Empty;
+
+            var method = "";
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+                using (var client = new HttpClient())
+                {
+                    client.Timeout = TimeSpan.FromSeconds(15);
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    method = GetAppSettingValue("JPEGgerAPI") + path;
+                    using (HttpResponseMessage response = client.GetAsync(method).Result)
+                    {
+                        if (response.IsSuccessStatusCode)
+                        {
+                            httpResponseString = response.Content.ReadAsStringAsync().Result;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogEvents($"Exception at ClientHandler.Get: {ex.Message}");
+                return JsonConvert.DeserializeObject<T>(httpResponseString);
+            }
+            return JsonConvert.DeserializeObject<T>(httpResponseString);
+        }
+
+        #endregion
 
     }
 }
