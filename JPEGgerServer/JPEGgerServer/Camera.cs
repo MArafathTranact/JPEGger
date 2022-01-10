@@ -59,13 +59,23 @@ namespace JPEGgerServer
                     }
                 }
                 sb = null;
+                return camCollection;
             }
-            return camCollection;
+            else
+            {
+                return new List<Camera>();
+            }
+
+
         }
 
         private static List<CameraGroup> GetCameraGroupList()
         {
-            return Get<List<CameraGroup>>($"camera_groups?yardid={GetAppSettingValue("YardId")}"); // Need to check yarid from Tim
+            var camGroup = Get<List<CameraGroup>>($"camera_groups?yardid={GetAppSettingValue("YardId")}");
+            if (camGroup != null)
+                return camGroup;
+            else
+                return new List<CameraGroup>();
         }
 
         public static List<Camera> GetConfiguredCamera(string camera_name)
