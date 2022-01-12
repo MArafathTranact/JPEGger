@@ -21,6 +21,7 @@ namespace JPEGgerServer
         public Socket client = null;
         private static readonly Encoding encoding = Encoding.UTF8;
         readonly ClientTransaction clientTransaction = new ClientTransaction();
+        private JpeggerWebRequest webRequest = new JpeggerWebRequest();
         public ClientHandler(Socket clientSocket)
         {
             client = clientSocket;
@@ -43,15 +44,23 @@ namespace JPEGgerServer
                             LogEvents($" Processing Jpegger request ");
 
                             string request = Utilities.ByteToHexa(bytes.Take(byteCount).ToArray());
-                            LogEvents($" Processing  : {request}");
+
                             var webrequestValidator = request.Split(new string[] { "\r" }, StringSplitOptions.None)[0];
-                            if (!string.IsNullOrEmpty(webrequestValidator) && webrequestValidator.Contains("sdcgi"))
+                            if (!string.IsNullOrEmpty(request) && request.Contains("sdcgi"))
                             {
+                                LogEvents($" Processing  : {request.Split(new string[] { "\r" }, StringSplitOptions.None)[0]}");
+
                                 ProcessWebRequest(request, request);
                                 //ProcessWebRequest(request, request);
                             }
+
+                            else if (webRequest != null && !string.IsNullOrEmpty(webRequest.TicketNumber))
+                            {
+                                ProcessImage(webRequest);
+                            }
                             else if (!string.IsNullOrEmpty(request) && !request.Contains("sdcgi"))
                             {
+                                LogEvents($" Processing  : {request}");
                                 var command = request.Split(' ')[0].Trim().ToLower();
                                 await ParseJPEGgerRequest(request, command);
                             }
@@ -776,41 +785,49 @@ namespace JPEGgerServer
             {
                 request = request.Split(new string[] { "\r" }, StringSplitOptions.None)[0];
                 LogEvents($"Request : {request}");
-
+                //var assets = request.Split(new string[] { "\r" }, StringSplitOptions.None)[0].Replace("GET", "");
+                //assets = assets.Substring(0, assets.IndexOf("HTTP")).Trim();
+                //if (assets.Contains("asset"))
+                //{
+                //    ProcessAssests(assets);
+                //}
+                //else
+                //{
                 var response = string.Empty;
-
+                LogEvents(request);
                 var split = request.Split('?');
                 var parameters = split[1].Split('&');
-                var webRequest = new JpeggerWebRequest();
+                //var webRequest = new JpeggerWebRequest();
                 foreach (var item in parameters)
                 {
                     var actualValue = item.Split('=');
                     var filter = actualValue[0];
+                    LogEvents(filter);
                     switch (filter)
                     {
                         case var s when filter.Contains("ticket_nbr"):
-                            webRequest.TicketNumber = actualValue[1];
+                            webRequest.TicketNumber = actualValue[1].Contains("HTTP") ? actualValue[1].Substring(0, actualValue[1].IndexOf("HTTP")).Trim() : actualValue[1];
                             break;
                         case var s when filter.Contains("location"):
-                            webRequest.YardId = actualValue[1];
+                            webRequest.YardId = actualValue[1].Contains("HTTP") ? actualValue[1].Substring(0, actualValue[1].IndexOf("HTTP")).Trim() : actualValue[1];
                             break;
                         case var s when filter.Contains("capture_seq_nbr"):
-                            webRequest.CaptureSeqNumber = actualValue[1];
+                            webRequest.CaptureSeqNumber = actualValue[1].Contains("HTTP") ? actualValue[1].Substring(0, actualValue[1].IndexOf("HTTP")).Trim() : actualValue[1];
                             break;
                         case var s when filter.Contains("image"):
-                            webRequest.Image = Convert.ToBoolean(actualValue[1]);
+                            webRequest.Image = Convert.ToBoolean(actualValue[1].Contains("HTTP") ? actualValue[1].Substring(0, actualValue[1].IndexOf("HTTP")).Trim() : actualValue[1]);
                             break;
                         case var s when filter.Contains("detail"):
-                            webRequest.Detail = Convert.ToBoolean(actualValue[1]);
+                            webRequest.Detail = Convert.ToBoolean(actualValue[1].Substring(0, actualValue[1].IndexOf("HTTP")).Trim());
                             break;
                     }
                 }
 
-                webRequest.TicketNumber = "22093";
+                //webRequest.TicketNumber = "22093";
 
                 if (!string.IsNullOrEmpty(webRequest.TicketNumber))
                 {
-                    ProcessImage(webRequest.TicketNumber);
+                    ProcessImage(webRequest);
                 }
                 else if (webRequest.Detail)
                 {
@@ -820,6 +837,8 @@ namespace JPEGgerServer
                 {
 
                 }
+                //}
+
 
             }
             catch (Exception ex)
@@ -830,42 +849,113 @@ namespace JPEGgerServer
 
         }
 
-        private void ProcessImage(string ticketNumber = "22093")
+        private void ProcessAssests(string assestUrl)
+        {
+            try
+            {
+                var uri = $"{GetAppSettingValue("JPEGgerWebViewer")}{assestUrl}";
+
+                using (var clientReq = new HttpClient())
+                {
+                    clientReq.DefaultRequestHeaders.Add("Title", "JPEGger");
+
+                    // string statusLine = "HTTP/1.1 200 OK\r\n";
+                    var content = clientReq.GetStringAsync(uri);
+
+                    string statusLine = "HTTP/1.1 200 OK\r\n";
+                    string responseHeader = "Content-Type: text/html\r\n";
+                    string responseBody = "<html><head><title>Hello World!</title></head><body><div>Hello World!</div></body></html>";
+                    var content1 = statusLine + responseHeader + responseBody;
+
+                    LogEvents($"Writign responses..{responseBody}");
+                    //client.Send(Encoding.UTF8.GetBytes(responseBody));
+                    client.Send(Encoding.UTF8.GetBytes(statusLine));
+                    client.Send(Encoding.UTF8.GetBytes("\r\n"));
+                    client.Send(Encoding.UTF8.GetBytes(content.Result));
+
+                }
+            }
+            catch (Exception ex)
+            {
+
+                LogEvents($" Exception at ClientHandler.ProcessWebRequest.ProcessAssests, Message :{ex.Message }");
+            }
+        }
+
+        private string BuildJpeggerWebRequest(JpeggerWebRequest webRequest)
+        {
+            var sb = new StringBuilder();
+            foreach (var prop in webRequest.GetType().GetProperties())
+            {
+
+                switch (prop.Name)
+                {
+                    case "TicketNumber":
+                        if (!string.IsNullOrEmpty(prop.GetValue(webRequest)?.ToString()))
+                            sb.Append("ticket_nbr=" + prop.GetValue(webRequest)?.ToString());
+                        break;
+                    case "YardId":
+                        if (!string.IsNullOrEmpty(prop.GetValue(webRequest)?.ToString()))
+                            sb.Append("&location=" + prop.GetValue(webRequest)?.ToString());
+                        break;
+                    case "CaptureSeqNumber":
+                        if (!string.IsNullOrEmpty(prop.GetValue(webRequest)?.ToString()))
+                            sb.Append("&capture_seq_nbr=" + prop.GetValue(webRequest)?.ToString());
+                        break;
+                    case "Image":
+                        if (prop.GetValue(webRequest)?.ToString() != "False")
+                            sb.Append("&ticket_nbr=" + prop.GetValue(webRequest)?.ToString());
+                        break;
+                }
+
+            }
+
+            return sb.ToString();
+        }
+        private void ProcessImage(JpeggerWebRequest webRequest)
         {
             try
             {
 
-                var response = Get<TicketToken>("tokens/generate");
-                if (response != null)
+                var param = BuildJpeggerWebRequest(webRequest);
+                if (!string.IsNullOrEmpty(param))
                 {
-                    var uri = $"{GetAppSettingValue("JPEGgerWebViewer")}images?ticket_number={ticketNumber}&token={response.Token}";
-
+                    var uri = $"{GetAppSettingValue("JPEGgerWebViewer")}sdcgi?table=images&{param}&noform=y";
+                    //var uri = $"https://jpegger.eastus.azurecontainer.io/sdcgi?table=images&ticket_nbr=1234&noform=y";
+                    LogEvents($"Requested url : {uri}");
                     using (var clientReq = new HttpClient())
                     {
                         clientReq.DefaultRequestHeaders.Add("Title", "JPEGger");
-
-                        // string statusLine = "HTTP/1.1 200 OK\r\n";
                         var content = clientReq.GetStringAsync(uri);
 
+
+                        var resultContent = content.Result;
+                        var hrefsingle = "href='/";
+                        var hrefdouble = "href=\"/";
+                        var srcsingle = "src='/";
+                        var srcdouble = "src=\"/";
+                        var jpegendpoint = GetAppSettingValue("JPEGgerWebViewer");
+                        resultContent = resultContent.Replace(hrefsingle, "href='" + jpegendpoint);
+                        resultContent = resultContent.Replace(hrefdouble, "href=\"" + jpegendpoint);
+                        resultContent = resultContent.Replace(srcsingle, "src='" + jpegendpoint);
+                        resultContent = resultContent.Replace(srcdouble, "src=\"" + jpegendpoint);
+
+
+                        //var httpresponse = clientReq.GetAsync(uri).Result;
+
+                        //LogEvents($"http response = {httpresponse}");
+
                         string statusLine = "HTTP/1.1 200 OK\r\n";
-                        string responseHeader = "Content-Type: text/html\r\n";
-                        string responseBody = "<html><head><title>Hello World!</title></head><body><div>Hello World!</div></body></html>";
-                        var content1 = statusLine + responseHeader + responseBody;
+                        //string responseHeader = "Content-Type: text/html\r\n";
 
-                        LogEvents($"Writign responses..{responseBody}");
-                        client.Send(Encoding.UTF8.GetBytes(responseBody));
-                        //client.Send(Encoding.UTF8.GetBytes(responseHeader));
-                        //client.Send(Encoding.UTF8.GetBytes("\r\n"));
+                        LogEvents($"Writing responses..{resultContent.Substring(0, 54)}");
                         //client.Send(Encoding.UTF8.GetBytes(responseBody));
-
-                        Thread.Sleep(5000);
-                        //content = content.Replace("<!DOCTYPE html>", "");
-                        //LogEvents($"{content}");
-
-                        //byte[] sendData = Utilities.GetSendBytes(content);
-                        //clientTransaction.Send(client, sendData, 0, sendData.Length, 10000);
+                        client.Send(Encoding.UTF8.GetBytes(statusLine));
+                        client.Send(Encoding.UTF8.GetBytes("\r\n"));
+                        client.Send(Encoding.UTF8.GetBytes(resultContent));
                     }
                 }
+
             }
             catch (Exception ex)
             {
